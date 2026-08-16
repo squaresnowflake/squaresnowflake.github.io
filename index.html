@@ -1,0 +1,800 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#020202">
+  <meta name="description" content="Independent studio for neural animation and synthetic motion.">
+  <title>studio square</title>
+
+  <style>
+    :root {
+      --bg: #020202;
+      --fg: #f4f4ef;
+      --muted: rgba(244,244,239,.46);
+      --line: rgba(244,244,239,.14);
+
+      --cursor-x: 50vw;
+      --cursor-y: 50vh;
+      --glow-opacity: 0;
+    }
+
+    * { box-sizing: border-box; }
+
+    html,
+    body {
+      margin: 0;
+      width: 100%;
+      min-height: 100%;
+      background: var(--bg);
+      color: var(--fg);
+      font-family: Arial, Helvetica, sans-serif;
+      overflow: hidden;
+    }
+
+    a {
+      color: inherit;
+      text-decoration: none;
+    }
+
+    .page {
+      position: relative;
+      width: 100%;
+      height: 100svh;
+      min-height: 520px;
+      overflow: hidden;
+      isolation: isolate;
+      background: #020202;
+    }
+
+    /* ---------------------------------------------------------
+       INTRO TUNNEL
+       --------------------------------------------------------- */
+
+    #tunnel {
+      position: absolute;
+      inset: 0;
+      z-index: 30;
+      width: 100%;
+      height: 100%;
+      background: #020202;
+      pointer-events: none;
+      opacity: 1;
+      transition: none;
+    }
+
+    body.intro-done #tunnel {
+      opacity: 0;
+    }
+
+    /* ---------------------------------------------------------
+       POST-INTRO CURSOR GLOW
+       No lag: positioned directly under actual pointer coords.
+       --------------------------------------------------------- */
+
+    .cursor-glow {
+      position: absolute;
+      z-index: 1;
+      left: 0;
+      top: 0;
+      width: min(112vmin, 1260px);
+      aspect-ratio: 1;
+      border-radius: 50%;
+      pointer-events: none;
+      opacity: var(--glow-opacity);
+      transform:
+        translate3d(var(--cursor-x), var(--cursor-y), 0)
+        translate(-50%, -50%);
+      transition: opacity 1.3s ease;
+      filter: blur(68px) saturate(145%);
+      will-change: transform, opacity;
+    }
+
+    .cursor-glow::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      border-radius: inherit;
+      background:
+        radial-gradient(
+          circle at center,
+          rgba(58, 208, 255, .82) 0%,
+          rgba(49, 112, 255, .58) 28%,
+          rgba(105, 58, 255, .30) 54%,
+          rgba(105, 58, 255, 0) 80%
+        );
+      animation: glowColorShift 12s ease-in-out infinite;
+    }
+
+    .vignette {
+      position: absolute;
+      z-index: 2;
+      inset: 0;
+      pointer-events: none;
+      background:
+        radial-gradient(circle at center, transparent 0 40%, rgba(2,2,2,.18) 68%, rgba(2,2,2,.80) 100%);
+    }
+
+    /* ---------------------------------------------------------
+       UI
+       --------------------------------------------------------- */
+
+    .chrome {
+      position: absolute;
+      z-index: 8;
+      inset: 0;
+      pointer-events: none;
+    }
+
+    .brand,
+    .contact,
+    .meta {
+      position: absolute;
+      font-size: 11px;
+      line-height: 1;
+      letter-spacing: .16em;
+      text-transform: uppercase;
+      opacity: 0;
+      filter: blur(6px);
+      transform: translateY(8px);
+    }
+
+    body.intro-done .brand,
+    body.intro-done .contact,
+    body.intro-done .meta {
+      animation: reveal .95s cubic-bezier(.2,.75,.2,1) forwards;
+    }
+
+    .brand {
+      top: max(28px, env(safe-area-inset-top));
+      left: max(28px, env(safe-area-inset-left));
+      animation-delay: .15s !important;
+    }
+
+    .contact {
+      top: max(28px, env(safe-area-inset-top));
+      right: max(28px, env(safe-area-inset-right));
+      pointer-events: auto;
+      animation-delay: .34s !important;
+    }
+
+    .contact::after {
+      content: "";
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: -7px;
+      height: 1px;
+      background: currentColor;
+      transform: scaleX(0);
+      transform-origin: right;
+      transition: transform .3s ease;
+    }
+
+    .contact:hover::after {
+      transform: scaleX(1);
+      transform-origin: left;
+    }
+
+    .meta {
+      left: max(28px, env(safe-area-inset-left));
+      bottom: max(26px, env(safe-area-inset-bottom));
+      color: var(--muted);
+      animation-delay: .55s !important;
+    }
+
+    /* ---------------------------------------------------------
+       VIDEO PREVIEW
+       Hidden entirely until first click.
+       --------------------------------------------------------- */
+
+    .hero {
+      position: absolute;
+      z-index: 6;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      padding: 84px 24px;
+      pointer-events: none;
+    }
+
+    .video-shell {
+      position: relative;
+      width: min(69vw, 920px);
+      aspect-ratio: 16 / 9;
+      overflow: hidden;
+      border: 1px solid rgba(255,255,255,.14);
+      background:
+        radial-gradient(circle at 63% 35%, rgba(255,255,255,.05), transparent 27%),
+        linear-gradient(145deg, rgba(9,9,11,.92), rgba(3,3,3,.94));
+      opacity: 0;
+      visibility: hidden;
+      transform: scale(.975) translateY(12px);
+      filter: blur(12px);
+      transition:
+        opacity 1s cubic-bezier(.2,.75,.2,1),
+        transform 1s cubic-bezier(.2,.75,.2,1),
+        filter 1s ease,
+        visibility 0s linear 1s;
+      pointer-events: none;
+    }
+
+    body.preview-visible .video-shell {
+      opacity: 1;
+      visibility: visible;
+      transform: scale(1) translateY(0);
+      filter: blur(0);
+      pointer-events: auto;
+      transition:
+        opacity 1s cubic-bezier(.2,.75,.2,1),
+        transform 1s cubic-bezier(.2,.75,.2,1),
+        filter 1s ease,
+        visibility 0s;
+    }
+
+    .preview-art {
+      position: absolute;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      pointer-events: none;
+    }
+
+    .preview-art::before {
+      content: "";
+      width: 46%;
+      aspect-ratio: 1;
+      border: 1px solid rgba(255,255,255,.16);
+      transform: rotate(45deg) skew(7deg,7deg);
+      box-shadow:
+        0 0 70px rgba(110,90,255,.05),
+        inset 0 0 70px rgba(255,255,255,.018);
+    }
+
+    .preview-art::after {
+      content: "";
+      position: absolute;
+      width: 20%;
+      aspect-ratio: 1;
+      border: 1px solid rgba(255,255,255,.42);
+      transform: rotate(45deg);
+    }
+
+    .video-label,
+    .play {
+      position: absolute;
+      z-index: 3;
+      pointer-events: none;
+    }
+
+    .video-label {
+      left: 18px;
+      bottom: 16px;
+      color: rgba(255,255,255,.63);
+      font-size: 10px;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+    }
+
+    .play {
+      right: 18px;
+      bottom: 15px;
+      width: 35px;
+      height: 35px;
+      border: 1px solid rgba(255,255,255,.34);
+      border-radius: 50%;
+    }
+
+    .play::after {
+      content: "";
+      position: absolute;
+      left: 13px;
+      top: 10px;
+      border-left: 8px solid rgba(255,255,255,.9);
+      border-top: 6px solid transparent;
+      border-bottom: 6px solid transparent;
+    }
+
+    .video-shell iframe {
+      position: absolute;
+      z-index: 10;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      border: 0;
+      background: #000;
+    }
+
+    /* ---------------------------------------------------------
+       CUSTOM CURSOR
+       --------------------------------------------------------- */
+
+    .cursor-dot {
+      display: none;
+    }
+
+    @media (hover: hover) and (pointer: fine) {
+      html,
+      body,
+      a,
+      .video-shell {
+        cursor: none !important;
+      }
+
+      .cursor-dot {
+        display: block;
+        position: fixed;
+        z-index: 100;
+        left: 0;
+        top: 0;
+        width: 14px;
+        height: 14px;
+        border-radius: 50%;
+        background: #fff;
+        pointer-events: none;
+        opacity: 0;
+        transform:
+          translate3d(var(--cursor-x), var(--cursor-y), 0)
+          translate(-50%, -50%);
+        transition: opacity .5s ease;
+        will-change: transform;
+      }
+
+      body.intro-done .cursor-dot {
+        opacity: 1;
+      }
+    }
+
+    @keyframes reveal {
+      from {
+        opacity: 0;
+        filter: blur(6px);
+        transform: translateY(8px);
+      }
+      to {
+        opacity: 1;
+        filter: blur(0);
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes glowColorShift {
+      0%, 100% {
+        background:
+          radial-gradient(
+            circle at center,
+            rgba(58, 208, 255, .82) 0%,
+            rgba(49, 112, 255, .58) 28%,
+            rgba(105, 58, 255, .30) 54%,
+            rgba(105, 58, 255, 0) 80%
+          );
+      }
+      33% {
+        background:
+          radial-gradient(
+            circle at center,
+            rgba(67, 103, 255, .84) 0%,
+            rgba(103, 55, 255, .60) 28%,
+            rgba(161, 50, 255, .31) 54%,
+            rgba(161, 50, 255, 0) 80%
+          );
+      }
+      66% {
+        background:
+          radial-gradient(
+            circle at center,
+            rgba(216, 55, 255, .82) 0%,
+            rgba(255, 54, 163, .58) 28%,
+            rgba(132, 58, 255, .30) 54%,
+            rgba(132, 58, 255, 0) 80%
+          );
+      }
+    }
+
+    @media (max-width: 700px) {
+      .page { min-height: 480px; }
+
+      .brand,
+      .contact,
+      .meta {
+        font-size: 9px;
+        letter-spacing: .12em;
+      }
+
+      .brand { left: 18px; top: 20px; }
+      .contact { right: 18px; top: 20px; }
+      .meta { left: 18px; bottom: 20px; }
+
+      .video-shell {
+        width: min(88vw, 920px);
+      }
+
+      .cursor-glow {
+        width: 132vmin;
+        filter: blur(54px) saturate(135%);
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *,
+      *::before,
+      *::after {
+        animation-duration: .001ms !important;
+        animation-delay: 0s !important;
+        transition-duration: .001ms !important;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <main class="page">
+    <canvas id="tunnel" aria-hidden="true"></canvas>
+
+    <div class="cursor-glow" aria-hidden="true"></div>
+    <div class="vignette" aria-hidden="true"></div>
+
+    <div class="chrome">
+      <!-- CHANGE -->
+      <div class="brand">studio square</div>
+
+      <!-- CHANGE -->
+      <a class="contact" href="mailto:sosisagavna@gmail.com">SOSISAGAVNA@GMAIL.COM</a>
+
+      <div class="meta">AI FILM · CREATIVE & ART DIRECTION</div>
+    </div>
+
+    <section class="hero" aria-label="Featured film">
+      <!--
+        This preview is INVISIBLE until the first click anywhere on the page.
+
+        Later:
+        Current video ID: iMTc7JqOsp8.
+        Clicking the visible preview then loads YouTube.
+      -->
+      <div
+        class="video-shell"
+        id="video"
+        role="button"
+        tabindex="0"
+        aria-label="Play featured film"
+        data-youtube-id="iMTc7JqOsp8"
+      >
+        <div class="preview-art" aria-hidden="true"></div>
+        <div class="video-label">FEATURED FILM / CLICK TO OPEN</div>
+        <div class="play" aria-hidden="true"></div>
+      </div>
+    </section>
+
+    <div class="cursor-dot" aria-hidden="true"></div>
+  </main>
+
+  <script>
+    (() => {
+      const root = document.documentElement;
+      const body = document.body;
+      const tunnel = document.querySelector('#tunnel');
+      const ctx = tunnel.getContext('2d', { alpha: false });
+      const video = document.querySelector('#video');
+
+      const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+      let w = 0;
+      let h = 0;
+      let dpr = 1;
+
+      let introDone = false;
+      let previewVisible = false;
+      let previewRequested = false;
+      let videoLoaded = false;
+
+      const INTRO_MS = reduceMotion ? 100 : 1000;
+      const FADE_MS = 0;
+      let introStart = performance.now();
+
+      // Regular octahedron vertices.
+      const octVerts = [
+        [ 1, 0, 0],
+        [-1, 0, 0],
+        [ 0, 1, 0],
+        [ 0,-1, 0],
+        [ 0, 0, 1],
+        [ 0, 0,-1]
+      ];
+
+      const octEdges = [
+        [0,2],[0,3],[0,4],[0,5],
+        [1,2],[1,3],[1,4],[1,5],
+        [2,4],[2,5],[3,4],[3,5]
+      ];
+
+      // Tunnel elements: offset octahedra placed down the Z axis.
+      const shapes = Array.from({ length: 18 }, (_, i) => {
+        const ring = i % 3;
+        return {
+          z: i * 2.35 + 1.2,
+          x: Math.sin(i * 1.71) * (0.26 + ring * .05),
+          y: Math.cos(i * 1.33) * (0.22 + ring * .04),
+          r: .75 + (i % 4) * .09,
+          rx: i * .21,
+          ry: i * .31,
+          rz: i * .17
+        };
+      });
+
+      function resize() {
+        w = innerWidth;
+        h = innerHeight;
+        dpr = Math.min(devicePixelRatio || 1, 1.5);
+
+        tunnel.width = Math.round(w * dpr);
+        tunnel.height = Math.round(h * dpr);
+        tunnel.style.width = w + 'px';
+        tunnel.style.height = h + 'px';
+
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      }
+
+      function rotatePoint(v, ax, ay, az) {
+        let [x,y,z] = v;
+
+        let c = Math.cos(ax), s = Math.sin(ax);
+        [y,z] = [y*c - z*s, y*s + z*c];
+
+        c = Math.cos(ay); s = Math.sin(ay);
+        [x,z] = [x*c + z*s, -x*s + z*c];
+
+        c = Math.cos(az); s = Math.sin(az);
+        [x,y] = [x*c - y*s, x*s + y*c];
+
+        return [x,y,z];
+      }
+
+      function project(x, y, z) {
+        const fov = Math.min(w,h) * .86;
+        const near = .22;
+
+        if (z <= near) return null;
+
+        return {
+          x: w * .5 + (x / z) * fov,
+          y: h * .5 + (y / z) * fov,
+          z
+        };
+      }
+
+      function drawOctahedron(shape, travel, t) {
+        // Move camera forward: shapes come toward viewer.
+        let z = shape.z - travel;
+
+        // Wrap past-camera objects to the far end to keep the tunnel dense.
+        const tunnelLength = 18 * 2.35;
+        while (z < .35) z += tunnelLength;
+
+        const wobble = Math.sin(shape.z * .7 + t * 1.7) * .05;
+        const sx = shape.x + Math.sin(t * .55 + shape.z) * .035;
+        const sy = shape.y + Math.cos(t * .42 + shape.z * .8) * .03;
+
+        const verts = octVerts.map(v => {
+          const vr = rotatePoint(
+            [v[0] * shape.r, v[1] * shape.r, v[2] * shape.r],
+            shape.rx + t * .14,
+            shape.ry + t * .19,
+            shape.rz + t * .11 + wobble
+          );
+
+          return project(
+            vr[0] + sx,
+            vr[1] + sy,
+            vr[2] + z
+          );
+        });
+
+        if (verts.some(v => v === null)) return;
+
+        // Nearer shapes brighter.
+        const nearFactor = Math.max(0, Math.min(1, 1 - (z / 27)));
+        const alpha = .05 + nearFactor * .44;
+
+        ctx.strokeStyle = `rgba(242,244,255,${alpha})`;
+        ctx.lineWidth = z < 2 ? 1.5 : 1;
+
+        ctx.beginPath();
+
+        for (const [a,b] of octEdges) {
+          ctx.moveTo(verts[a].x, verts[a].y);
+          ctx.lineTo(verts[b].x, verts[b].y);
+        }
+
+        ctx.stroke();
+
+        // Occasional point nodes.
+        if ((Math.floor(shape.z) % 4) === 0) {
+          for (let i = 0; i < verts.length; i += 2) {
+            const p = verts[i];
+            const r = z < 2 ? 2.0 : 1.0;
+
+            ctx.fillStyle = `rgba(248,248,245,${alpha * .8})`;
+            ctx.beginPath();
+            ctx.arc(p.x, p.y, r, 0, Math.PI * 2);
+            ctx.fill();
+          }
+        }
+      }
+
+      function drawTunnel(now) {
+        if (introDone) return;
+
+        const elapsed = now - introStart;
+        const p = Math.min(1, elapsed / INTRO_MS);
+
+        // During the full 1.5 s flight the whole tunnel progressively
+        // loses opacity and falls out of focus.
+        const fade = 1 - Math.pow(p, 1.35);
+        const blurPx = (p * p) * 10;
+
+        tunnel.style.opacity = Math.max(0, fade).toFixed(3);
+        tunnel.style.filter = `blur(${blurPx.toFixed(2)}px)`;
+
+        // Ease into much faster forward travel.
+        const eased = 1 - Math.pow(1 - p, 3);
+        const travel = eased * 26.5;
+        const t = elapsed * .001;
+
+        ctx.fillStyle = '#020202';
+        ctx.fillRect(0,0,w,h);
+
+        // Very subtle center depth halo; no permanent disks.
+        const halo = ctx.createRadialGradient(
+          w*.5, h*.5, 0,
+          w*.5, h*.5, Math.min(w,h)*.45
+        );
+        halo.addColorStop(0, 'rgba(80,95,150,.035)');
+        halo.addColorStop(.35, 'rgba(25,30,45,.02)');
+        halo.addColorStop(1, 'rgba(0,0,0,0)');
+        ctx.fillStyle = halo;
+        ctx.fillRect(0,0,w,h);
+
+        for (let i = shapes.length - 1; i >= 0; i--) {
+          drawOctahedron(shapes[i], travel, t);
+        }
+
+        // Speed streaks only near the end, very restrained.
+        if (p > .58) {
+          const k = (p - .58) / .42;
+          ctx.strokeStyle = `rgba(235,240,255,${.02 + k*.06})`;
+          ctx.lineWidth = 1;
+
+          for (let i = 0; i < 12; i++) {
+            const a = i * 2.3999632297 + t * .15;
+            const r1 = Math.min(w,h) * (.08 + i*.014);
+            const r2 = r1 * (1.3 + k*.8);
+
+            const x1 = w*.5 + Math.cos(a)*r1;
+            const y1 = h*.5 + Math.sin(a)*r1;
+            const x2 = w*.5 + Math.cos(a)*r2;
+            const y2 = h*.5 + Math.sin(a)*r2;
+
+            ctx.beginPath();
+            ctx.moveTo(x1,y1);
+            ctx.lineTo(x2,y2);
+            ctx.stroke();
+          }
+        }
+
+        if (p >= 1) {
+          finishIntro();
+          return;
+        }
+
+        requestAnimationFrame(drawTunnel);
+      }
+
+      function finishIntro() {
+        if (introDone) return;
+
+        introDone = true;
+
+        // Force actual black frame before UI appears.
+        ctx.fillStyle = '#020202';
+        ctx.fillRect(0,0,w,h);
+
+        tunnel.style.opacity = '0';
+        tunnel.style.filter = 'blur(10px)';
+        body.classList.add('intro-done');
+
+        // Glow softly switches on only after tunnel is gone.
+        requestAnimationFrame(() => {
+          root.style.setProperty('--glow-opacity', '.74');
+        });
+
+        setTimeout(() => {
+          tunnel.style.display = 'none';
+        }, 30);
+
+        if (previewRequested) {
+          revealPreview();
+        }
+      }
+
+      function revealPreview() {
+        if (previewVisible) return;
+        previewVisible = true;
+        body.classList.add('preview-visible');
+      }
+
+      function setPointer(e) {
+        root.style.setProperty('--cursor-x', e.clientX + 'px');
+        root.style.setProperty('--cursor-y', e.clientY + 'px');
+      }
+
+      function firstPageClick(e) {
+        // If preview is already visible, leave its own click handler alone.
+        if (previewVisible) return;
+
+        previewRequested = true;
+
+        if (introDone) {
+          revealPreview();
+        }
+      }
+
+      function loadYouTube(e) {
+        if (!previewVisible || videoLoaded) return;
+
+        e.stopPropagation();
+
+        const id = video.dataset.youtubeId;
+
+        if (!id || id === 'YOUR_VIDEO_ID') {
+          video.animate(
+            [
+              { transform: 'scale(1)' },
+              { transform: 'scale(.985)' },
+              { transform: 'scale(1)' }
+            ],
+            { duration: 260, easing: 'ease-out' }
+          );
+          return;
+        }
+
+        videoLoaded = true;
+
+        const iframe = document.createElement('iframe');
+
+        iframe.src =
+          'https://www.youtube-nocookie.com/embed/' +
+          encodeURIComponent(id) +
+          '?autoplay=1&rel=0&modestbranding=1';
+
+        iframe.title = 'Featured film';
+        iframe.allow =
+          'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share';
+        iframe.allowFullscreen = true;
+        iframe.referrerPolicy = 'strict-origin-when-cross-origin';
+
+        video.replaceChildren(iframe);
+      }
+
+      addEventListener('resize', resize, { passive: true });
+      addEventListener('pointermove', setPointer, { passive: true });
+
+      // First click anywhere reveals the preview.
+      document.addEventListener('click', firstPageClick);
+
+      // Once visible, clicking the preview loads YouTube.
+      video.addEventListener('click', loadYouTube);
+
+      video.addEventListener('keydown', e => {
+        if ((e.key === 'Enter' || e.key === ' ') && previewVisible) {
+          e.preventDefault();
+          loadYouTube(e);
+        }
+      });
+
+      resize();
+      requestAnimationFrame(drawTunnel);
+    })();
+  </script>
+</body>
+</html>
