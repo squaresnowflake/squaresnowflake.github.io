@@ -81,64 +81,34 @@
     .cursor-glow {
       position: absolute;
       z-index: 1;
-      left: 0;
-      top: 0;
-      width: min(156vmin, 1740px);
-      aspect-ratio: 1;
-      border-radius: 50%;
+      inset: 0;
       pointer-events: none;
       opacity: var(--glow-opacity);
-      transform:
-        translate3d(var(--cursor-x), var(--cursor-y), 0)
-        translate(-50%, -50%);
       transition: opacity 1.3s ease;
-      will-change: transform;
     }
 
     .cursor-glow::before {
       content: "";
       position: absolute;
       inset: 0;
-      border-radius: inherit;
 
-      /* Very long falloff: no visible terminal color ring. */
+      /*
+        Full-screen gradient, not a translated circular element.
+        There is therefore no circular layer boundary for the browser
+        to expose or clip.
+      */
       background:
         radial-gradient(
-          circle at center,
-          hsl(var(--glow-hue) 100% 68% / .72) 0%,
-          hsl(var(--glow-hue) 100% 63% / .60) 12%,
-          hsl(var(--glow-hue) 100% 59% / .44) 27%,
-          hsl(var(--glow-hue) 100% 55% / .27) 43%,
-          hsl(var(--glow-hue) 100% 52% / .14) 58%,
-          hsl(var(--glow-hue) 100% 50% / .065) 70%,
-          hsl(var(--glow-hue) 100% 48% / .026) 80%,
-          hsl(var(--glow-hue) 100% 47% / .010) 88%,
-          hsl(var(--glow-hue) 100% 46% / .003) 94%,
-          hsl(var(--glow-hue) 100% 46% / 0) 100%
-        );
-
-      /* Independent edge fade. This keeps the outer perimeter
-         invisible even if a browser quantizes the gradient stops. */
-      -webkit-mask-image:
-        radial-gradient(
-          circle at center,
-          #000 0%,
-          #000 46%,
-          rgba(0,0,0,.92) 58%,
-          rgba(0,0,0,.70) 70%,
-          rgba(0,0,0,.38) 82%,
-          rgba(0,0,0,.14) 91%,
-          transparent 100%
-        );
-      mask-image:
-        radial-gradient(
-          circle at center,
-          #000 0%,
-          #000 46%,
-          rgba(0,0,0,.92) 58%,
-          rgba(0,0,0,.70) 70%,
-          rgba(0,0,0,.38) 82%,
-          rgba(0,0,0,.14) 91%,
+          circle 72vmax at var(--cursor-x) var(--cursor-y),
+          hsl(var(--glow-hue) 100% 68% / .68) 0%,
+          hsl(var(--glow-hue) 100% 63% / .54) 13%,
+          hsl(var(--glow-hue) 100% 59% / .38) 27%,
+          hsl(var(--glow-hue) 100% 55% / .22) 42%,
+          hsl(var(--glow-hue) 100% 52% / .105) 56%,
+          hsl(var(--glow-hue) 100% 50% / .042) 67%,
+          hsl(var(--glow-hue) 100% 48% / .014) 76%,
+          hsl(var(--glow-hue) 100% 47% / .004) 82%,
+          hsl(var(--glow-hue) 100% 46% / 0) 87%,
           transparent 100%
         );
 
@@ -321,19 +291,19 @@
 
       .contact {
         left: 18px;
-        top: 48px;
         right: auto;
+        top: auto;
+        bottom: 46px;
         font-style: italic;
+        color: rgba(244,244,239,.46);
       }
 
       .meta {
         left: 18px;
         bottom: 20px;
+        color: var(--fg);
       }
 
-      .cursor-glow {
-        width: 188vmin;
-      }
     }
 
     @media (prefers-reduced-motion: reduce) {
