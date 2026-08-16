@@ -83,7 +83,7 @@
       z-index: 1;
       left: 0;
       top: 0;
-      width: min(112vmin, 1260px);
+      width: min(156vmin, 1740px);
       aspect-ratio: 1;
       border-radius: 50%;
       pointer-events: none;
@@ -92,8 +92,7 @@
         translate3d(var(--cursor-x), var(--cursor-y), 0)
         translate(-50%, -50%);
       transition: opacity 1.3s ease;
-      filter: blur(68px) saturate(145%);
-      will-change: transform, opacity;
+      will-change: transform;
     }
 
     .cursor-glow::before {
@@ -101,15 +100,52 @@
       position: absolute;
       inset: 0;
       border-radius: inherit;
+
+      /* Very long falloff: no visible terminal color ring. */
       background:
         radial-gradient(
           circle at center,
-          hsl(var(--glow-hue) 100% 67% / .84) 0%,
-          hsl(var(--glow-hue) 100% 59% / .58) 28%,
-          hsl(var(--glow-hue) 100% 52% / .30) 54%,
-          hsl(var(--glow-hue) 100% 46% / 0) 80%
+          hsl(var(--glow-hue) 100% 68% / .72) 0%,
+          hsl(var(--glow-hue) 100% 63% / .60) 12%,
+          hsl(var(--glow-hue) 100% 59% / .44) 27%,
+          hsl(var(--glow-hue) 100% 55% / .27) 43%,
+          hsl(var(--glow-hue) 100% 52% / .14) 58%,
+          hsl(var(--glow-hue) 100% 50% / .065) 70%,
+          hsl(var(--glow-hue) 100% 48% / .026) 80%,
+          hsl(var(--glow-hue) 100% 47% / .010) 88%,
+          hsl(var(--glow-hue) 100% 46% / .003) 94%,
+          hsl(var(--glow-hue) 100% 46% / 0) 100%
         );
-      animation: glowHuePingPong 8s ease-in-out infinite alternate;
+
+      /* Independent edge fade. This keeps the outer perimeter
+         invisible even if a browser quantizes the gradient stops. */
+      -webkit-mask-image:
+        radial-gradient(
+          circle at center,
+          #000 0%,
+          #000 46%,
+          rgba(0,0,0,.92) 58%,
+          rgba(0,0,0,.70) 70%,
+          rgba(0,0,0,.38) 82%,
+          rgba(0,0,0,.14) 91%,
+          transparent 100%
+        );
+      mask-image:
+        radial-gradient(
+          circle at center,
+          #000 0%,
+          #000 46%,
+          rgba(0,0,0,.92) 58%,
+          rgba(0,0,0,.70) 70%,
+          rgba(0,0,0,.38) 82%,
+          rgba(0,0,0,.14) 91%,
+          transparent 100%
+        );
+
+      animation:
+        glowHuePingPong 8s ease-in-out infinite alternate,
+        glowIrregularBreath 23s linear infinite;
+      will-change: opacity;
     }
 
     .vignette {
@@ -246,6 +282,27 @@
       to   { --glow-hue: 318; }
     }
 
+    /* Slow, deliberately uneven breathing:
+       long stable periods, occasional dimming, rare near-disappearance. */
+    @keyframes glowIrregularBreath {
+      0%   { opacity: 1; }
+      11%  { opacity: .97; }
+      19%  { opacity: 1; }
+      27%  { opacity: .72; }
+      31%  { opacity: .90; }
+      39%  { opacity: 1; }
+      52%  { opacity: .96; }
+      58%  { opacity: .48; }
+      62%  { opacity: .10; }
+      65%  { opacity: .28; }
+      70%  { opacity: .86; }
+      76%  { opacity: 1; }
+      87%  { opacity: .94; }
+      91%  { opacity: .68; }
+      94%  { opacity: .88; }
+      100% { opacity: 1; }
+    }
+
     @media (max-width: 700px) {
       .page { min-height: 480px; }
 
@@ -256,13 +313,26 @@
         letter-spacing: .12em;
       }
 
-      .brand { left: 18px; top: 20px; }
-      .contact { right: 18px; top: 20px; }
-      .meta { left: 18px; bottom: 20px; }
+      .brand {
+        left: 18px;
+        top: 20px;
+        right: auto;
+      }
+
+      .contact {
+        left: 18px;
+        top: 48px;
+        right: auto;
+        font-style: italic;
+      }
+
+      .meta {
+        left: 18px;
+        bottom: 20px;
+      }
 
       .cursor-glow {
-        width: 132vmin;
-        filter: blur(54px) saturate(135%);
+        width: 188vmin;
       }
     }
 
