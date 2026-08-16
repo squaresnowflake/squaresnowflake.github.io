@@ -5,9 +5,15 @@
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
   <meta name="theme-color" content="#020202">
   <meta name="description" content="Independent studio for neural animation and synthetic motion.">
-  <title>studio square</title>
+  <title>SQUARE SNOWFLAKE</title>
 
   <style>
+  @property --glow-hue {
+    syntax: "<number>";
+    inherits: false;
+    initial-value: 195;
+  }
+
     :root {
       --bg: #020202;
       --fg: #f4f4ef;
@@ -98,12 +104,12 @@
       background:
         radial-gradient(
           circle at center,
-          rgba(58, 208, 255, .82) 0%,
-          rgba(49, 112, 255, .58) 28%,
-          rgba(105, 58, 255, .30) 54%,
-          rgba(105, 58, 255, 0) 80%
+          hsl(var(--glow-hue) 100% 67% / .84) 0%,
+          hsl(var(--glow-hue) 100% 59% / .58) 28%,
+          hsl(var(--glow-hue) 100% 52% / .30) 54%,
+          hsl(var(--glow-hue) 100% 46% / 0) 80%
         );
-      animation: glowColorShift 12s ease-in-out infinite;
+      animation: glowHuePingPong 8s ease-in-out infinite alternate;
     }
 
     .vignette {
@@ -130,9 +136,9 @@
     .contact,
     .meta {
       position: absolute;
-      font-size: 11px;
+      font-size: 14px;
       line-height: 1;
-      letter-spacing: .16em;
+      letter-spacing: .15em;
       text-transform: uppercase;
       opacity: 0;
       filter: blur(6px);
@@ -235,37 +241,9 @@
       }
     }
 
-    @keyframes glowColorShift {
-      0%, 100% {
-        background:
-          radial-gradient(
-            circle at center,
-            rgba(58, 208, 255, .82) 0%,
-            rgba(49, 112, 255, .58) 28%,
-            rgba(105, 58, 255, .30) 54%,
-            rgba(105, 58, 255, 0) 80%
-          );
-      }
-      33% {
-        background:
-          radial-gradient(
-            circle at center,
-            rgba(67, 103, 255, .84) 0%,
-            rgba(103, 55, 255, .60) 28%,
-            rgba(161, 50, 255, .31) 54%,
-            rgba(161, 50, 255, 0) 80%
-          );
-      }
-      66% {
-        background:
-          radial-gradient(
-            circle at center,
-            rgba(216, 55, 255, .82) 0%,
-            rgba(255, 54, 163, .58) 28%,
-            rgba(132, 58, 255, .30) 54%,
-            rgba(132, 58, 255, 0) 80%
-          );
-      }
+    @keyframes glowHuePingPong {
+      from { --glow-hue: 192; }
+      to   { --glow-hue: 318; }
     }
 
     @media (max-width: 700px) {
@@ -274,7 +252,7 @@
       .brand,
       .contact,
       .meta {
-        font-size: 9px;
+        font-size: 11px;
         letter-spacing: .12em;
       }
 
@@ -309,7 +287,7 @@
 
     <div class="chrome">
       <!-- CHANGE -->
-      <div class="brand">studio square</div>
+      <div class="brand">SQUARE SNOWFLAKE</div>
 
       <!-- CHANGE -->
       <a class="contact" href="mailto:sosisagavna@gmail.com">SOSISAGAVNA@GMAIL.COM</a>
